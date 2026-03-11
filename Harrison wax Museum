@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Who Should Harrison Be?</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      position: relative;
+    }
+
+    .app {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      padding: 0;
+    }
+
+    .stage {
+      position: relative;
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      aspect-ratio: 16 / 9;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .slide {
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 28px 28px 88px;
+      gap: 12px;
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.10), transparent 35%),
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.2));
+    }
+
+    .slide.active {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.99); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent, #333), transparent 55%);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: clamp(0.8rem, 1.4vw, 1rem);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: clamp(2rem, 5vw, 4.8rem);
+      line-height: 1.05;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.35);
+    }
+
+    .subtitle {
+      font-size: clamp(1rem, 2.2vw, 2rem);
+      max-width: 900px;
+      line-height: 1.35;
+      margin-bottom: 6px;
+    }
+
+    .fact {
+      font-size: clamp(0.95rem, 1.9vw, 1.5rem);
+      max-width: 920px;
+      line-height: 1.4;
+      opacity: 0.96;
+    }
+
+    .question {
+      font-size: clamp(1rem, 2vw, 1.6rem);
+      font-weight: 700;
+      margin-top: 6px;
+      color: #fff;
+      opacity: 0.95;
+    }
+
+    img {
+      max-width: min(78vw, 900px);
+      max-height: 42vh;
+      width: auto;
+      height: auto;
+      border-radius: 20px;
+      object-fit: contain;
+      background: rgba(17,17,17,0.85);
+      box-shadow: 0 14px 40px rgba(0,0,0,0.42);
+      margin: 10px 0 4px;
+      border: 2px solid rgba(255,255,255,0.08);
+    }
+
+    .img-fallback {
+      display: none;
+      width: min(78vw, 900px);
+      max-width: 78vw;
+      min-height: 180px;
+      max-height: 42vh;
+      border-radius: 20px;
+      background: rgba(17,17,17,0.85);
+      border: 2px solid rgba(255,255,255,0.10);
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      font-size: clamp(1rem, 2vw, 1.4rem);
+      color: #ddd;
+      margin: 10px 0 4px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.42);
+    }
+
+    .vote-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(120px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+      width: min(90vw, 760px);
+    }
+
+    .vote-pill {
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 18px;
+      padding: 14px 12px;
+      font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+      font-weight: 700;
+      backdrop-filter: blur(4px);
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(20,20,20,0.78);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      padding: 10px 14px;
+      backdrop-filter: blur(6px);
+      z-index: 20;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      background: #fff;
+      color: #000;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+
+    .counter {
+      font-size: 14px;
+      opacity: 0.88;
+      min-width: 58px;
+      text-align: center;
+    }
+
+    .hint {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 13px;
+      opacity: 0.7;
+      z-index: 20;
+      background: rgba(20,20,20,0.58);
+      padding: 8px 10px;
+      border-radius: 12px;
+    }
+
+    .tv-toggle {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 25;
+      border: none;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.16);
+    }
+
+    .tv-mode .controls,
+    .tv-mode .hint,
+    .tv-mode .tv-toggle {
+      display: none;
+    }
+
+    .tv-mode .slide {
+      padding-bottom: 40px;
+    }
+
+    @media (max-width: 700px) {
+      .vote-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .controls {
+        bottom: 8px;
+        padding: 8px 10px;
+      }
+
+      .btn {
+        padding: 10px 14px;
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+    <div class="stage" id="stage">
+      <button class="tv-toggle" id="tvToggle">TV Mode</button>
+      <div class="hint">Tap right for next • left for back</div>
+
+      <section class="slide active" style="--accent:#5b7cfa;">
+        <div class="content">
+          <div class="tag">Wax Museum Picker</div>
+          <h1>Who Should Harrison Be?</h1>
+          <div class="subtitle">Choose a famous person for the Wax Museum project.</div>
+          <div class="fact">Tap the right side of the screen to go forward. Tap the left side to go back.</div>
+          <div class="fact">Use TV Mode before screen sharing.</div>
+          <div class="question">Which one feels the coolest to dress up as?</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#2f8f6b;">
+        <div class="content">
+          <div class="tag">Wildlife</div>
+          <h1>Steve Irwin</h1>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Steve%20Irwin%20holding%20Koala.jpg"
+               alt="Steve Irwin"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">Image unavailable for Steve Irwin</div>
+          <div class="subtitle">Wildlife adventurer and animal expert</div>
+          <div class="fact">Famous for teaching people about crocodiles, snakes, and protecting wildlife.</div>
+          <div class="question">Would being the Crocodile Hunter be awesome?</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#c62828;">
+        <div class="content">
+          <div class="tag">Sports</div>
+          <h1>Michael Jordan</h1>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Michael_Jordan_in_2014.jpg"
+               alt="Michael Jordan"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">Image unavailable for Michael Jordan</div>
+          <div class="subtitle">Basketball legend</div>
+          <div class="fact">Known for amazing dunks, championships, and being one of the greatest players ever.</div>
+          <div class="question">Would a #23 jersey be the coolest costume?</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#607d8b;">
+        <div class="content">
+          <div class="tag">Space</div>
+          <h1>Neil Armstrong</h1>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Neil_Armstrong_pose.jpg"
+               alt="Neil Armstrong"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">Image unavailable for Neil Armstrong</div>
+          <div class="subtitle">First person to walk on the moon</div>
+          <div class="fact">Apollo 11 astronaut who made history in 1969.</div>
+          <div class="question">Would it be fun to dress up like an astronaut?</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#8d6e63;">
+        <div class="content">
+          <div class="tag">Adventure</div>
+          <h1>Theodore Roosevelt</h1>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/T_Roosevelt.jpg"
+               alt="Theodore Roosevelt"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">Image unavailable for Theodore Roosevelt</div>
+          <div class="subtitle">Explorer, outdoorsman, and president</div>
+          <div class="fact">Loved adventure and helped protect national parks and wild places.</div>
+          <div class="question">Cowboy-explorer-president. Pretty strong combo.</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#ad7b32;">
+        <div class="content">
+          <div class="tag">Baseball</div>
+          <h1>Babe Ruth</h1>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/1/13/Babe_Ruth2.jpg"
+               alt="Babe Ruth"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">Image unavailable for Babe Ruth</div>
+          <div class="subtitle">Baseball superstar</div>
+          <div class="fact">One of the most famous home run hitters in baseball history.</div>
+          <div class="question">Would carrying a bat make this one a winner?</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#7e57c2;">
+        <div class="content">
+          <div class="tag">Inventor</div>
+          <h1>Nikola Tesla</h1>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/d/d4/N.Tesla.JPG"
+               alt="Nikola Tesla"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">Image unavailable for Nikola Tesla</div>
+          <div class="subtitle">Brilliant inventor</div>
+          <div class="fact">Helped develop important electrical technology used around the world.</div>
+          <div class="question">Scientist hair and electricity? That’s a fun one.</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#4caf50;">
+        <div class="content">
+          <div class="tag">Nature</div>
+          <h1>John Muir</h1>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/John_Muir_1902.jpg"
+               alt="John Muir"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">Image unavailable for John Muir</div>
+          <div class="subtitle">Nature explorer</div>
+          <div class="fact">Loved mountains and helped protect Yosemite and other wild places.</div>
+          <div class="question">Would a hiking explorer be fun to present?</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#1565c0;">
+        <div class="content">
+          <div class="tag">History</div>
+          <h1>Jackie Robinson</h1>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Jackie_Robinson_1950.jpg"
+               alt="Jackie Robinson"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">Image unavailable for Jackie Robinson</div>
+          <div class="subtitle">Baseball hero</div>
+          <div class="fact">Broke baseball’s color barrier and became one of the sport’s most important players.</div>
+          <div class="question">Would #42 be the best jersey choice?</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#ff9800;">
+        <div class="content">
+          <div class="tag">Founding Father</div>
+          <h1>Benjamin Franklin</h1>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Benjamin_Franklin_by_Joseph_Duplessis_1778.jpg"
+               alt="Benjamin Franklin"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">Image unavailable for Benjamin Franklin</div>
+          <div class="subtitle">Inventor and Founding Father</div>
+          <div class="fact">Famous for the kite experiment and many clever ideas and inventions.</div>
+          <div class="question">Would a white wig and glasses make this one funny?</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#6d4c41;">
+        <div class="content">
+          <div class="tag">Explorer</div>
+          <h1>Christopher Columbus</h1>
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Christopher_Columbus.jpg"
+               alt="Christopher Columbus"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="img-fallback">Image unavailable for Christopher Columbus</div>
+          <div class="subtitle">Ocean explorer</div>
+          <div class="fact">Known for voyages across the Atlantic in 1492.</div>
+          <div class="question">Would a ship explorer costume be fun?</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#455a64;">
+        <div class="content">
+          <div class="tag">Survival</div>
+          <h1>Bear Grylls</h1>
+          <div class="img-fallback" style="display:flex;">Survival icon card</div>
+          <div class="subtitle">Survival expert and adventurer</div>
+          <div class="fact">Known for surviving extreme wilderness and teaching outdoor survival skills.</div>
+          <div class="question">This one feels very Harrison-coded.</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#0097a7;">
+        <div class="content">
+          <div class="tag">Ocean</div>
+          <h1>Jacques Cousteau</h1>
+          <div class="img-fallback" style="display:flex;">Ocean explorer card</div>
+          <div class="subtitle">Ocean explorer and filmmaker</div>
+          <div class="fact">Helped invent scuba gear and explored the oceans around the world.</div>
+          <div class="question">Would scuba gear make this the coolest costume?</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#795548;">
+        <div class="content">
+          <div class="tag">Frontier</div>
+          <h1>Daniel Boone</h1>
+          <div class="img-fallback" style="display:flex;">Frontier explorer card</div>
+          <div class="subtitle">American frontier explorer</div>
+          <div class="fact">Famous for exploring and helping settle the American frontier.</div>
+          <div class="question">Explorer hat and frontier gear could be a strong play.</div>
+        </div>
+      </section>
+
+      <section class="slide" style="--accent:#e91e63;">
+        <div class="content">
+          <div class="tag">Final Round</div>
+          <h1>Which One Wins?</h1>
+          <div class="subtitle">Pick the one Harrison would be most excited to dress up as.</div>
+          <div class="vote-grid">
+            <div class="vote-pill">Steve Irwin</div>
+            <div class="vote-pill">Michael Jordan</div>
+            <div class="vote-pill">Neil Armstrong</div>
+            <div class="vote-pill">Theodore Roosevelt</div>
+            <div class="vote-pill">Babe Ruth</div>
+            <div class="vote-pill">Nikola Tesla</div>
+            <div class="vote-pill">John Muir</div>
+            <div class="vote-pill">Jackie Robinson</div>
+            <div class="vote-pill">Benjamin Franklin</div>
+            <div class="vote-pill">Christopher Columbus</div>
+            <div class="vote-pill">Bear Grylls</div>
+            <div class="vote-pill">Jacques Cousteau</div>
+            <div class="vote-pill">Daniel Boone</div>
+          </div>
+          <div class="question">My bet is Bear Grylls or Steve Irwin.</div>
+        </div>
+      </section>
+
+      <div class="controls">
+        <button class="btn" id="prevBtn">Back</button>
+        <div class="counter" id="counter">1 / 15</div>
+        <button class="btn" id="nextBtn">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll(".slide");
+    const counter = document.getElementById("counter");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const tvToggle = document.getElementById("tvToggle");
+    const stage = document.getElementById("stage");
+    let index = 0;
+
+    function showSlide(i) {
+      slides.forEach((slide, idx) => {
+        slide.classList.toggle("active", idx === i);
+      });
+      counter.textContent = (i + 1) + " / " + slides.length;
+    }
+
+    function nextSlide() {
+      index = (index + 1) % slides.length;
+      showSlide(index);
+    }
+
+    function prevSlide() {
+      index = (index - 1 + slides.length) % slides.length;
+      showSlide(index);
+    }
+
+    nextBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      nextSlide();
+    });
+
+    prevBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      prevSlide();
+    });
+
+    tvToggle.addEventListener("click", function(e) {
+      e.stopPropagation();
+      stage.classList.toggle("tv-mode");
+    });
+
+    document.addEventListener("click", function(e) {
+      if (e.target.closest(".controls") || e.target.closest(".tv-toggle")) return;
+      const x = e.clientX || 0;
+      if (x > window.innerWidth / 2) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+    });
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener("touchstart", function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    document.addEventListener("touchend", function(e) {
+      touchEndX = e.changedTouches[0].screenX;
+      const diff = touchEndX - touchStartX;
+
+      if (Math.abs(diff) > 40) {
+        if (diff < 0) nextSlide();
+        else prevSlide();
+      }
+    }, { passive: true });
+
+    showSlide(index);
+  </script>
+</body>
+</html>
